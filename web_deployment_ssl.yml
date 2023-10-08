@@ -1,0 +1,96 @@
+---
+- name: Konfiguracija web servera
+  hosts: web_server
+  become: yes
+
+
+  tasks:
+
+# Kreiranje korisnika 'webguy'
+    - name: Instalacija standardnih paketa
+      apt:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - sudo
+
+    - name: Kreiranje korisnika 'webguy'
+      user:
+        name: webguy
+        password: "{{ 'webguypass' | password_hash('sha512') }}"
+        shell: /bin/bash
+        state: present
+        groups: sudo
+
+
+# APACHE2 instalacija i pokretanje
+    - name: Instalacija Apache HTTPd
+      apt:
+        name: apache2
+        state: present
+
+    - name: Start and enable Apache service
+      service:
+        name: apache2
+        state: started
+        enabled: yes
+
+
+# Generiranje SSL Self-Signed certifikata za website1
+    - name: Generiranje SSL Self-Signed certifikata
+      command: openssl req -x509 -nodes -days 365 -newkey rsa:2048 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=website1.oddworld.com" -keyout /etc/ssl/private/website1.key -out /etc/ssl/certs/website1.crt
+      args:
+        creates: /etc/ssl/private/website1.key
+
+# a2enmod ssl
+    - name: Omoguci SSL
+      command: a2enmod ssl
+      notify:
+        - restart_apache
+
+# Kreiranje virtualnih hostova
+    - name: Create virtual hosts
+      template:
+        src: "templates/{{ item.src }}"
+        dest: "/etc/apache2/sites-available/{{ item.dest }}"
+      with_items:
+        - { src: "website1-ssl.conf.j2", dest: "website1.conf" }
+        - { src: "website2.conf.j2", dest: "website2.conf" }
+        - { src: "website3.conf.j2", dest: "website3.conf" }
+
+# Virtual Hosts enable
+    - name: Enable the virtual host
+      command: "a2ensite {{ item }}"
+      with_items:
+        - website1.conf
+        - website2.conf
+        - website3.conf
+
+# Kreiranje direktorija i index.html
+    - name: Create directory for website
+      file:
+        path: "/var/www/{{ item }}"
+        state: directory
+        owner: root
+        group: root
+      with_items:
+        - website1
+        - website2
+        - website3
+
+    - name: Create index.html file
+      copy:
+        content: "<html><head><title>Website {{ item }}</title></head><body><h1>Welcome to Website {{ item }}</h1></body></html>"
+        dest: "/var/www/{{ item }}/index.html"
+      with_items:
+        - website1
+        - website2
+        - website3
+      notify:
+        - restart_apache
+
+  handlers:
+    - name: restart_apache
+      service:
+        name: apache2
+        state: restarted

@@ -1,0 +1,19 @@
+<VirtualHost *:80>
+    ServerAdmin webmaster@website1.oddworld.com
+    ServerName website1.oddworld.com
+    DocumentRoot /var/www/website1
+</VirtualHost>
+
+
+<VirtualHost *:443>
+    ServerAdmin webmaster@website1.oddworld.com
+    ServerName website1.oddworld.com
+    DocumentRoot /var/www/website1
+
+    SSLEngine on
+    SSLCertificateFile /etc/ssl/certs/website1.crt
+    SSLCertificateKeyFile /etc/ssl/private/website1.key
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>

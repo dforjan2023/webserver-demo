@@ -1,0 +1,2 @@
+[web_server]
+server ansible_ssh_user=user1 ansible_ssh_host=websrv.oddworld.com ansible_sudo_pass=user1pass
