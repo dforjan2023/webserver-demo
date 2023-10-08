@@ -29,7 +29,7 @@
         name: apache2
         state: present
 
-    - name: Start and enable Apache service
+    - name: Pokretanje Apache servisa
       service:
         name: apache2
         state: started
@@ -49,7 +49,7 @@
         - restart_apache
 
 # Kreiranje virtualnih hostova
-    - name: Create virtual hosts
+    - name: Kreiranje virtualnih hostova
       template:
         src: "templates/{{ item.src }}"
         dest: "/etc/apache2/sites-available/{{ item.dest }}"
@@ -59,7 +59,7 @@
         - { src: "website3.conf.j2", dest: "website3.conf" }
 
 # Virtual Hosts enable
-    - name: Enable the virtual host
+    - name: Omoguci virtualne hostove
       command: "a2ensite {{ item }}"
       with_items:
         - website1.conf
@@ -67,7 +67,7 @@
         - website3.conf
 
 # Kreiranje direktorija i index.html
-    - name: Create directory for website
+    - name: Kreiranje direktorija
       file:
         path: "/var/www/{{ item }}"
         state: directory
@@ -78,7 +78,7 @@
         - website2
         - website3
 
-    - name: Create index.html file
+    - name: Kreiranje index.html datoteke
       copy:
         content: "<html><head><title>Website {{ item }}</title></head><body><h1>Welcome to Website {{ item }}</h1></body></html>"
         dest: "/var/www/{{ item }}/index.html"
